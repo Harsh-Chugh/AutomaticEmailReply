@@ -8,7 +8,6 @@ async function generateSendList(gmail, messages, now) {
         // Fetch the thread's messages and count them
         try {
             const response = await gmail.users.threads.get({ userId: 'me', id: message.threadId });
-            // Traverse  
             // this_thread_messages contains all messages of {message} 's thread id
             const this_thread_messages = response.data.messages;
 
@@ -31,8 +30,8 @@ async function generateSendList(gmail, messages, now) {
             }
 
             let send_autoreply = true;
+            // check if thread already contains a 'SENT' message
             this_thread_messages.forEach((msg) => {
-                if (check(this_thread_messages[this_thread_messages.length - 1].internalDate, now)) console.log(msg.labelIds);
                 if (msg.labelIds.includes('SENT')) {
                     send_autoreply = false;
                 }

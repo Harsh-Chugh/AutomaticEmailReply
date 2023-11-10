@@ -5,6 +5,7 @@ const LABEL = "VACATION_RESPONSE";
 
 async function sendReply(gmail, sendList) {
     for (let i = 0; i < sendList.length; i++) {
+        // prepare message
         let rawMessage = `To: ${sendList[i].From}\r\n`;
         rawMessage += `From: ${sendList[i].To}\r\n`;
         rawMessage += `Subject: Re: ${sendList[i].Subject}\r\n\r\n`;
@@ -21,12 +22,14 @@ async function sendReply(gmail, sendList) {
         };
 
         try {
+            // send message
             const resp = await gmail.users.messages.send({
                 userId: 'me',
                 resource: sendMessage
             });
             console.log("Sent Successfully iteration: " + i);
 
+            // modify label of 'SENT' message
             const labelId = await checkAndCreateLabels(gmail, LABEL);
             await modifyLabelOfSentMessage(gmail, resp.data.id, labelId);
         }

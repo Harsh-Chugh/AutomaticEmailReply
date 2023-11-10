@@ -27,8 +27,6 @@ async function createLabel(gmail, labelName) {
                 name: labelName
             }
         });
-        //Get the label ID
-        // label_id = label.data.id;
         console.log("label created", label);
         return true;
     } catch (error) {
