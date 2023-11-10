@@ -3,11 +3,19 @@ const {google} = require('googleapis');
 const readline = require('readline');
 require("dotenv").config();
 const fs = require('fs');
+const express = require('express');
 
-// const now = new Date().getTime();
-const now = '1699532379255';
+const app = express();
+const PORT = process.env.PORT || 5000;
 
-console.log(now);
+app.listen(PORT, ()=>{
+  console.log(`Server is running on port ${PORT}`);
+})
+
+const now = new Date().getTime().toString();
+// const now = '1699532379255';
+
+console.log(typeof(now));
 const LABEL = "VACATION_RESPONSE";
 
 const oauth2Client = new google.auth.OAuth2(
@@ -17,6 +25,7 @@ const oauth2Client = new google.auth.OAuth2(
   );
 
 
+  // Created in utils but check once
 function check(internalDate){
     let size_now = now.length;
     let size_internalDate = internalDate.length;
@@ -34,6 +43,7 @@ function check(internalDate){
 
 }
 
+// Created in utils
 function compressArray(messages) {
   const uniqueThreads = new Set();
   const compressedMessages = [];
@@ -54,6 +64,7 @@ async function get_token(){
       const authURL = oauth2Client.generateAuthUrl({
         access_type: 'offline',
         scope: SCOPES,
+        prompt: 'consent'
       });
 
       console.log("Go to this url and grant access. Then get the code and enter it - ",  authURL);
@@ -137,7 +148,6 @@ async function test(){
                 // console.log(typeof(now));
 
                 if(!check(this_thread_messages[this_thread_messages.length - 1].internalDate)){
-                    // As messages returned by gmail are sorted in latest first fashion. Current[i] message's age >= server's age => Next message's age >= server's age
                     break;
                 }
                 // console.log("header" ,this_thread_messages[this_thread_messages.length - 1].payload.headers);
@@ -183,6 +193,18 @@ async function test(){
         const labels = await getLabels(gmail);
         console.log("Labels : ", labels);
 
+
+        // const respo = await gmail.users.messages.modify({userId: "me", 
+        // id: '18bb43e33cec4846',
+        // resource: {
+        //   "addLabelIds": [
+        //     'Label_1'
+        //   ],
+        //   "removeLabelIds": [
+        //   ]
+        // }});
+        // console.log("label modified: ", respo);
+
         // await createLabel(gmail);
 
 
@@ -198,8 +220,8 @@ async function test(){
           const sendMessage = {
             raw: encodedMessage,
             'threadId': sendList[i].threadId,
-            'In-Reply-To' : sendList[i].id,
-            'References' : sendList[i].id
+            'In-Reply-To' : sendList[i].threadId,
+            'References' : sendList[i].threadId
           };
           console.log("sendMessage", sendMessage);
 
@@ -207,8 +229,8 @@ async function test(){
             const resp = await gmail.users.messages.send({
               userId: 'me',
               resource: sendMessage
+              
             });
-
             console.log("Response after sending email ", resp)
             console.log("Sent Successfully iteration: " + i);
 
@@ -223,8 +245,22 @@ async function test(){
               // await createLabel(gmail);
             }
 
+            // Get the VACATION_RESPONSE Label email id
+            const label_id = await get_label_id(labels);
+            console.log("label id: ", label_id);
             // Add the label to the email sent above
 
+            const respo = await gmail.users.messages.modify({userId: "me", 
+              id: resp.data.id,
+              resource: {
+                "addLabelIds": [
+                  label_id
+                ],
+                "removeLabelIds": [
+                ]
+              }});
+              
+              console.log("label modified: ", respo);
 
           
             
@@ -240,9 +276,25 @@ async function test(){
     }
 } 
 
-async function getLabels(gmail){
-  const response = await gmail.users.labels.list({userId : "me"});
-  return response.data.labels.map(label => label.id);
+async function get_label_id(labels){
+    let label_id = '';
+    for(let i = 0; i < labels.length; i++){
+      if(labels[i].labelName === LABEL){
+        label_id = labels[i].labelId;
+        break;
+      }
+    }
+    return label_id;
+}
+
+
+
+async function getLabels(gmail) {
+  const response = await gmail.users.labels.list({ userId: "me" });
+  return response.data.labels.map(label => ({
+    labelId: label.id,
+    labelName: label.name
+  }));
 }
 
 async function createLabel(gmail){
@@ -296,9 +348,11 @@ async function createLabel(gmail){
 // }
 
 
-// setTimeout(() =>{
-// } , 30000);
-test();
+setInterval(() =>{
+  // console.log("Testing timeout")
+  test();
+} , 12000);
+// test();
 // listThreads();
 // get_token();
 // while(true){
