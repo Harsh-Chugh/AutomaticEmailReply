@@ -12,7 +12,11 @@ const SCOPES = ["https://www.googleapis.com/auth/gmail.readonly", "https://www.g
 
 const TOKEN_PATH = "token.json";
 
-// This is for fresh authentication
+/*
+    @Description: Initiates the OAuth2 authentication process.
+    @Return:
+        Promise<string> - Resolves with a success message when authentication is successful, rejects with an error message otherwise.
+*/
 async function authenticate() {
     return new Promise((resolve, reject) => {
         const authURL = oauth2Client.generateAuthUrl({
@@ -43,11 +47,19 @@ async function authenticate() {
     })
 }
 
+/*
+    @Description: Sets the OAuth2 credentials using a stored token.
+*/
 async function setToken() {
     const token = fs.readFileSync("token.json");
     oauth2Client.setCredentials(JSON.parse(token));
 }
 
+/*
+    @Description: Retrieves the OAuth2 client instance, ensuring the token is set. If the token is expired, it reauthenticates and sets the new token.
+    @Return:
+        Promise<Object> - Resolves with the OAuth2 client instance.
+*/
 async function getClient() {
     try {
         console.log("Setting token");

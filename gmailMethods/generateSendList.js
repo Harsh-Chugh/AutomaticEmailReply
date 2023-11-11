@@ -1,5 +1,24 @@
 const { check } = require("../utils/checkDate");
 
+/*
+    @Description: Generates a list of messages eligible for autoreply based on specified criteria.
+    @Params:
+        gmail: Object - Gmail API client instance (e.g., created using google.gmail({ version: 'v1', auth: oauth2Client }))
+        messages: Array - An array of message objects with properties {id, threadId}
+        now: Date - The date and time when the server started (used for time-based filtering)
+    @Return:
+        Promise<Array<Object>> - Resolves with an array of message objects eligible for autoreply. Each message object in the array has the following format:
+        [
+            {
+                id: string,       // Unique identifier for the message
+                threadId: string, // Unique identifier for the thread to which the message belongs
+                From: string,     // Sender information
+                Subject: string,  // Subject of the message
+                To: string        // Recipient information
+            },
+            // ... (additional message objects)
+        ]
+*/
 async function generateSendList(gmail, messages, now) {
     let sendList = [];
     // Traversing on each unread message
